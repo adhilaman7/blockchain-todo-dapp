@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Ethereum Todo List</title>
+
+  <!-- Bootstrap -->
+  <link href="vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Navigation Bar */
+    .navbar {
+      background: rgba(0, 0, 0, 0.8) !important;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      padding: 1rem 2rem !important;
+    }
+
+    .navbar-brand {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .account-info {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .account-info:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Main Container */
+    main {
+      margin-top: 80px;
+      padding: 2rem 1rem;
+      min-height: calc(100vh - 80px);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    /* Loader */
+    #loader {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 400px;
+      color: white;
+    }
+
+    #loader p {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+      font-weight: 500;
+    }
+
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #content {
+      display: none;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    /* Card Container */
+    .todo-card {
+      background: white;
+      border-radius: 15px;
+      padding: 2rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      animation: slideUp 0.5s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Form */
+    .todo-form {
+      margin-bottom: 2rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    #newTask {
+      flex: 1;
+      padding: 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+
+    #newTask:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    #newTask::placeholder {
+      color: #aaa;
+    }
+
+    .btn-add-task {
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      font-size: 0.95rem;
+    }
+
+    .btn-add-task:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-add-task:active {
+      transform: translateY(0);
+    }
+
+    /* Task Lists */
+    .task-section {
+      margin-bottom: 2rem;
+    }
+
+    .task-section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #667eea;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .task-section-title i {
+      font-size: 1.1rem;
+    }
+
+    .task-count {
+      background: #667eea;
+      color: white;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      margin-left: 0.5rem;
+    }
+
+    /* Task Item */
+    .task-item {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 10px;
+      margin-bottom: 0.75rem;
+      transition: all 0.3s ease;
+      border-left: 4px solid #667eea;
+    }
+
+    .task-item:hover {
+      background: #f0f2ff;
+      transform: translateX(5px);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .task-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      margin-right: 1rem;
+      accent-color: #667eea;
+      flex-shrink: 0;
+    }
+
+    .task-item .content {
+      flex: 1;
+      font-size: 1rem;
+      color: #333;
+      word-break: break-word;
+    }
+
+    #completedTaskList .task-item {
+      background: #f0f0f0;
+      border-left-color: #ccc;
+    }
+
+    #completedTaskList .content {
+      color: #999;
+      text-decoration: line-through;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #666;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      color: #ddd;
+      margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+      font-size: 1.1rem;
+      color: #999;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      flex: 1;
+      min-width: 120px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 1rem;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-number {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #667eea;
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 0.5rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      main {
+        margin-top: 70px;
+      }
+
+      .todo-card {
+        padding: 1.5rem;
+      }
+
+      .todo-form {
+        flex-direction: column;
+      }
+
+      .btn-add-task {
+        width: 100%;
+      }
+
+      .stats-bar {
+        gap: 0.5rem;
+      }
+
+      .stat-item {
+        min-width: 80px;
+        padding: 0.75rem;
+      }
+
+      .stat-number {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <nav class="navbar navbar-dark fixed-top">
+    <a class="navbar-brand" href="#">
+      <i class="fas fa-list-check"></i> Ethereum Todo List
+    </a>
+    <ul class="navbar-nav px-3">
+      <li class="nav-item">
+        <div class="account-info">
+          <i class="fas fa-wallet"></i>
+          <span id="account">Connecting...</span>
+        </div>
+      </li>
+    </ul>
+  </nav>
+
+  <main>
+
+    <!-- Loader -->
+    <div id="loader" class="text-center">
+      <p>Initializing App</p>
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Content -->
+    <div id="content">
+
+      <div class="todo-card">
+
+        <!-- Title -->
+        <h1 style="margin-bottom: 2rem; color: #333; font-weight: 700; text-align: center;">
+          <i class="fas fa-tasks" style="color: #667eea; margin-right: 0.5rem;"></i>
+          My Tasks
+        </h1>
+
+        <!-- Form -->
+        <form class="todo-form" onsubmit="App.createTask(); return false;">
+          <input id="newTask" type="text" placeholder="Add a new task..." required>
+          <button type="submit" class="btn-add-task">
+            <i class="fas fa-plus"></i> Add
+          </button>
+        </form>
+
+        <!-- Active Tasks -->
+        <div class="task-section">
+          <div class="task-section-title">
+            <i class="fas fa-circle-notch"></i> Active Tasks <span class="task-count" id="activeCount">0</span>
+          </div>
+          <div id="taskList" class="list-unstyled">
+            <div class="taskTemplate" style="display: none">
+              <div class="task-item">
+                <input type="checkbox">
+                <span class="content">Task</span>
+              </div>
+            </div>
+          </div>
+          <div id="emptyActive" class="empty-state" style="display: none;">
+            <i class="fas fa-check-circle"></i>
+            <p>No active tasks!</p>
+            <small>All done for now 🎉</small>
+          </div>
+        </div>
+
+        <!-- Completed Tasks -->
+        <div class="task-section">
+          <div class="task-section-title">
+            <i class="fas fa-check"></i> Completed <span class="task-count" id="completedCount">0</span>
+          </div>
+          <div id="completedTaskList" class="list-unstyled">
+          </div>
+          <div id="emptyCompleted" class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>No completed tasks yet</p>
+            <small>Keep working! 💪</small>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Scripts (ORDER VERY IMPORTANT) -->
+
+  <!-- jQuery -->
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+  <!-- Bootstrap -->
+
+  <script src="vendor/bootstrap/dist/js/bootstrap.min.js"></script>
+
+  <!-- ✅ Web3 (0.20.x for truffle-contract 3.0.6 compatibility) -->
+
+  <script src="https://cdn.jsdelivr.net/npm/web3@0.20.7/dist/web3.min.js"></script>
+
+  <!-- ✅ Truffle Contract -->
+
+  <script src="vendor/truffle-contract/dist/truffle-contract.min.js"></script>
+
+  <!-- App -->
+
+  <script src="app.js"></script>
+
+</body>
+</html>
